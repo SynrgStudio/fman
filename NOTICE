@@ -1,0 +1,27 @@
+fman Clean
+==========
+Maintained by SynrgStudio.
+Copyright (c) 2026 SynrgStudio, for the new contributions in this repository.
+
+This is an independent project based on fman by Michael Herrmann.
+Base source: https://github.com/mherrmann/fman
+Baseline: 1.7.6, commit 9ef5819042beb71049bf805ec83e690f831b6cd7.
+No affiliation with or endorsement by the original author is implied.
+The original Git history, signing material and release infrastructure are not
+part of this repository.
+
+Original fman code: Copyright (c) 2026 Michael Herrmann, MIT License.
+The original permission and warranty notice is preserved verbatim in
+LICENSES/fman-MIT.txt. That code remains available under its original MIT terms.
+
+New SynrgStudio contributions and this modified project as a whole are
+licensed under GNU GPL version 3 only (SPDX: GPL-3.0-only); see LICENSE.
+This does not replace the licenses or copyright notices of upstream portions,
+fonts, dependencies, or other third-party material. See THIRD_PARTY.md.
+
+Bundled fonts
+-------------
+Open Sans.ttf: Digitized data copyright (c) 2011, Google Corporation.
+Roboto Bold.ttf: Copyright 2011 Google Inc. All Rights Reserved.
+Both font files identify Apache License 2.0 in their embedded metadata.
+The license text is in LICENSES/Apache-2.0.txt.

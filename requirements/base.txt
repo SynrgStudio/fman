@@ -1,0 +1,3 @@
+PyQt5==5.15.11
+tinycss==0.4
+requests==2.34.2

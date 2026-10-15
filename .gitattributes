@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.png binary
+*.ico binary
+*.ttf binary
+*.zip binary
+# Preserve third-party license texts verbatim, including their original spacing.
+LICENSES/** -text -whitespace

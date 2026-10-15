@@ -1,0 +1,2 @@
+# Optional: standalone packaging, no vendor build service required.
+PyInstaller==6.19.0
