@@ -1,5 +1,6 @@
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 Michael Herrmann
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2026 SynrgStudio
+# Based on fman by Michael Herrmann (MIT); see LICENSES/fman-MIT.txt.
 from fman.impl.model.model import Model
 from fman.impl.model.drag_and_drop import DragAndDrop
 from fman.impl.model.diff import ComputeDiff
@@ -141,8 +142,9 @@ class SortedFileSystemModel(QSortFilterProxyModel):
 		self._filters.append(filter_)
 		self.sourceModel().add_filter(filter_)
 	def remove_filter(self, filter_):
-		self._filters.remove(filter_)
-		self.sourceModel().remove_filter(filter_)
+		if filter_ in self._filters:
+			self._filters.remove(filter_)
+			self.sourceModel().remove_filter(filter_)
 	def url(self, index):
 		return self.sourceModel().url(self.mapToSource(index))
 	def find(self, url):

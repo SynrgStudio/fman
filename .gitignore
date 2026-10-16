@@ -10,6 +10,9 @@ target/
 dist/
 build/
 *.spec
+*.exe
+*.dll
+*.pyd
 *.log
 .coverage
 htmlcov/

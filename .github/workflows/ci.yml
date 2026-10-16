@@ -30,3 +30,5 @@ jobs:
         run: python tests/smoke.py
       - name: Arrow navigation smoke
         run: python tests/navigation_smoke.py
+      - name: Windows panels and unified palette smoke
+        run: python tests/windows_features_smoke.py

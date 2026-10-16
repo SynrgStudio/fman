@@ -1,5 +1,6 @@
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 Michael Herrmann
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2026 SynrgStudio
+# Based on fman by Michael Herrmann (MIT); see LICENSES/fman-MIT.txt.
 from fman.impl.model.table import TableModel
 from PyQt5.QtCore import Qt, pyqtSignal
 
@@ -62,5 +63,6 @@ class SortFilterTableModel(TableModel):
 		self._filters.append(filter_)
 		self.update()
 	def remove_filter(self, filter_):
-		self._filters.remove(filter_)
-		self.update()
+		if filter_ in self._filters:
+			self._filters.remove(filter_)
+			self.update()

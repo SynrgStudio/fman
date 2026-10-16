@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import traceback
+from time import monotonic
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src/main/python'))
@@ -36,8 +37,13 @@ def main():
 					traceback.print_exc()
 					app.exit(1)
 			return wrapped
+		deadline = monotonic() + 30
 		def enter():
 			pane = context.window.get_panes()[0]
+			if pane.get_path() != as_url(str(folder)) or pane._widget._model.rowCount() < 2:
+				assert monotonic() < deadline, 'Initial directory did not load'
+				QTimer.singleShot(100, step(enter))
+				return
 			pane.place_cursor_at(as_url(str(folder / 'child')))
 			QTest.keyClick(pane._widget._file_view, Qt.Key_Right)
 			QTimer.singleShot(500, step(go_up))
@@ -57,7 +63,7 @@ def main():
 			result[0] = 0
 			app.exit(0)
 		QTimer.singleShot(2500, step(enter))
-		QTimer.singleShot(12000, lambda: app.exit(1))
+		QTimer.singleShot(45000, lambda: app.exit(1))
 		code = context.run()
 		return code or result[0]
 

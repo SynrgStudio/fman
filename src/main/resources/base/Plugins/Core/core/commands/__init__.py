@@ -59,7 +59,8 @@ class Help(ApplicationCommand):
 		show_alert(
 			'fman Clean keyboard shortcuts\n\n'
 			'Up/Down: select files\nLeft: parent folder\nRight: enter folder\n'
-			'Enter: open file\nTab: switch panels\n'
+			'Enter: open file\nTab: switch panels\nCtrl+P: unified search (> commands)\n'
+			'Ctrl+,: settings\nF3: preview\nEscape: close panel\n'
 			'F5: copy\nF6: move\nShift+F6: rename\nF7: new folder\n'
 			'Delete: trash\nF9: terminal\n\n'
 			'Use the command palette for other actions and platform-specific shortcuts.'
@@ -1047,7 +1048,8 @@ class ToggleHiddenFiles(DirectoryPaneCommand):
 	aliases = ('Toggle hidden files', 'Show / hide hidden files')
 
 	def __call__(self):
-		_toggle_hidden_files(self.pane, not _is_showing_hidden_files(self.pane))
+		from fman.impl.application_context import get_application_context
+		get_application_context().toggle_hidden_files()
 
 class InitHiddenFilesFilter(DirectoryPaneListener):
 	def __init__(self, *args, **kwargs):
@@ -1168,6 +1170,41 @@ def _get_volumes_url():
 	else:
 		raise NotImplementedError(PLATFORM)
 
+class UnifiedPalette(DirectoryPaneCommand):
+	aliases = ('Search files, folders and commands',)
+
+	def __call__(self, query=''):
+		from fman.impl.application_context import get_application_context
+		context = get_application_context()
+		catalog = CommandPalette(self.pane)
+		url = self.pane.get_path()
+		current = as_human_readable(url) if splitscheme(url)[0] == 'file://' else ''
+		visited = load_json('Visited Paths.json', default={})
+		result = context.main_window.show_unified_palette(catalog._suggest_commands,
+			visited, current, context.preferences.values, query)
+		if result and result[1]:
+			entry = result[1]
+			if entry.kind == 'command':
+				entry.target()
+			else:
+				# File results reveal their parent and select the file, never launch it.
+				self.pane.run_command('open_directory', {'url': as_url(entry.target)})
+
+class OpenSettings(DirectoryPaneCommand):
+	aliases = ('Settings', 'Preferences')
+
+	def __call__(self):
+		from fman.impl.application_context import get_application_context
+		context = get_application_context()
+		context.main_window.toggle_settings(context, self.pane._widget)
+
+class TogglePreview(DirectoryPaneCommand):
+	aliases = ('Preview file or directory',)
+
+	def __call__(self):
+		from fman.impl.application_context import get_application_context
+		get_application_context().main_window.toggle_preview(self.pane._widget)
+
 class CommandPalette(DirectoryPaneCommand):
 
 	_MATCHERS = (contains_chars_after_separator(' '), contains_chars)
@@ -1177,28 +1214,7 @@ class CommandPalette(DirectoryPaneCommand):
 		self._last_query = ''
 		self._last_cmd_name = ''
 	def __call__(self):
-		if self._last_cmd_name:
-			initial_suggestions = [
-				quicksearch_item.value.name
-				for quicksearch_item in self._suggest_commands(self._last_query)
-			]
-			try:
-				initial_item = initial_suggestions.index(self._last_cmd_name)
-			except ValueError:
-				initial_item = 0
-		else:
-			initial_item = 0
-		result = show_quicksearch(
-			self._suggest_commands, query=self._last_query, item=initial_item
-		)
-		if result:
-			query, command = result
-			if command:
-				self._last_query = query
-				self._last_cmd_name = command.name
-				command()
-		else:
-			self._last_query = self._last_cmd_name = ''
+		self.pane.run_command('unified_palette')
 	def _suggest_commands(self, query):
 		result = [[] for _ in self._MATCHERS]
 		key_bindings = load_json('Key Bindings.json')

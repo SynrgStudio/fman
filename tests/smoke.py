@@ -7,6 +7,7 @@ import socket
 import sys
 import tempfile
 import traceback
+from time import monotonic
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,8 +42,15 @@ def main():
 					previous(*args)
 				sys.excepthook = record
 			context.install_exception_hook = install_hook
+			deadline = monotonic() + 30
 			def verify():
 				try:
+					ready = len(context.window.get_panes()) == 2 and all(
+						context.mother_fs.exists(p.get_path() + '/example.txt')
+						for p in context.window.get_panes())
+					if not ready and monotonic() < deadline:
+						QTimer.singleShot(100, verify)
+						return
 					assert context.main_window.windowTitle() == 'fman Clean'
 					panes = context.window.get_panes()
 					assert len(panes) == 2
@@ -61,8 +69,7 @@ def main():
 				except Exception:
 					traceback.print_exc()
 					errors.append('UI verification failed')
-				finally:
-					context.app.exit(1 if errors else 0)
+				context.app.exit(1 if errors else 0)
 			_ = context.app
 			QTimer.singleShot(2500, verify)
 			code = context.run()

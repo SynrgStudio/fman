@@ -27,7 +27,14 @@ Python's license and notices are retained in LICENSES/Python-notices.txt.
 Build tooling includes PyInstaller (GPL with bootloader exception), its hook
 collection, altgraph, pefile, pywin32-ctypes, packaging and setuptools. These have
 independent license terms. Python and Qt also contain third-party code beyond
-this summary. Non-Windows requirements include osxtrash/pyobjc or distro.
+this summary. Windows x64 is the supported target; legacy platform branches are
+not a promise of support.
+
+The optional external Everything SDK connector carries the MIT notice of David
+Carpenter (2022), preserved in LICENSES/Everything-SDK-MIT.txt. Its reviewed DLL is
+installed explicitly from voidtools outside this repository, not included in our
+source snapshot or standalone build. The separate Everything application retains
+its own terms. No vitraj code was copied; its feature list informed the design.
 
 This is a reference inventory, not a substitute for inspecting the actual
 binary payload. `requirements/windows-build.lock.txt` pins the tested Python

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.6+synrg.2
+
+- Windows x64 is now the only supported product/build target.
+- Unified Ctrl+P for commands, recent/direct paths and optional Everything IPC search.
+- Bounded/debounced background queries, stale-result rejection and native helper timeout.
+- Settings panel (Ctrl+,): fonts, hidden files, safe parent row and external tools.
+- Shared panel manager with exclusive settings/live preview in the opposite pane.
+- F3 read-only text/image/directory-stat preview with resource limits.
+- Parent navigation row stays outside file operations, selections and filters.
+- F5/F6 and Ctrl+C/X/V are retained; compression is available in palette/context menu.
+- Filter removal is idempotent. UI smoke checks wait for readiness instead of fixed sleeps.
+- Everything SDK is installed explicitly outside the repo; no DLL is redistributed.
+
 ## 1.7.6+synrg.1
 
 Initial independent SynrgStudio source snapshot, based on fman 1.7.6.

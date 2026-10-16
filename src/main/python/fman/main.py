@@ -1,8 +1,18 @@
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 Michael Herrmann
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2026 SynrgStudio
+# Based on fman by Michael Herrmann (MIT); see LICENSES/fman-MIT.txt.
 import sys
 
 def main():
+	if len(sys.argv) == 6 and sys.argv[1] == '--everything-worker':
+		from fman.impl.everything import helper
+		try:
+			helper(*sys.argv[2:])
+		except Exception:
+			pass  # An unavailable optional provider must not open a native error dialog.
+		return
+	if sys.platform != 'win32' or sys.maxsize <= 2**32:
+		raise SystemExit('fman Clean currently targets Windows x64 only.')
 	from fman.impl.application_context import get_application_context
 	appctxt = get_application_context()
 	exit_code = appctxt.run()

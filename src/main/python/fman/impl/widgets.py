@@ -16,7 +16,7 @@ from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QWidget, QMainWindow, QSplitter, QStatusBar, \
 	QMessageBox, QInputDialog, QLineEdit, QFileDialog, QLabel, QDialog, \
 	QHBoxLayout, QPushButton, QVBoxLayout, QSplitterHandle, QApplication, \
-	QFrame, QAction, QSizePolicy, QProgressDialog, QProgressBar
+	QFrame, QAction, QSizePolicy, QProgressDialog, QProgressBar, QShortcut, QStackedWidget
 
 import re
 
@@ -61,6 +61,11 @@ class DirectoryPaneWidget(QWidget):
 		self._file_view.doubleClicked.connect(self._on_doubleclicked)
 		self._file_view.key_press_event_filter = self._on_key_pressed
 		self.setLayout(Layout(self._location_bar, self._file_view))
+		self._show_parent_entry = True
+		self._parent_button = QPushButton('..  Parent directory', self)
+		self._parent_button.setFocusPolicy(Qt.NoFocus)
+		self._parent_button.clicked.connect(lambda: self._controller._panes[self].run_command('go_up'))
+		self.layout().insertWidget(1, self._parent_button)
 		self._location_bar.setFocusProxy(self._file_view)
 		self.setFocusProxy(self._file_view)
 		self._controller = controller
@@ -93,6 +98,9 @@ class DirectoryPaneWidget(QWidget):
 		self._file_view.move_cursor_page_down(toggle_selection)
 	@run_in_main_thread
 	def focus(self):
+		parent = self.parentWidget()
+		if isinstance(parent, QStackedWidget) and parent.currentWidget() is not self:
+			parent.window().panel_manager.deactivate(focus=False)
 		self.setFocus()
 	@run_in_main_thread
 	def select_all(self):
@@ -138,7 +146,7 @@ class DirectoryPaneWidget(QWidget):
 		self._model.remove_filter(filter_)
 	@property
 	def window(self):
-		return self.parentWidget().parentWidget()
+		return self.parentWidget().window()
 	def get_columns(self):
 		return [
 			column.get_qualified_name() for column in self._model.get_columns()
@@ -187,6 +195,7 @@ class DirectoryPaneWidget(QWidget):
 	def _on_files_dropped(self, *args):
 		self._controller.on_files_dropped(self, *args)
 	def _on_location_changed(self, url):
+		self._parent_button.setVisible(self._show_parent_entry and not url.startswith('null://'))
 		self._filter_bar.close()
 		self._location_bar.setText(as_human_readable(url))
 	def _on_location_loaded(self, url):
@@ -285,6 +294,16 @@ class MainWindow(QMainWindow):
 		self._panes = []
 		self._splitter = Splitter(self)
 		self.setCentralWidget(self._splitter)
+		from fman.impl.panels import PanelManager
+		self.panel_manager = PanelManager(self, self._splitter)
+		self._shortcuts = []
+		for keys, command in (('Ctrl+P', 'unified_palette'), ('Ctrl+,', 'open_settings'), ('F3', 'toggle_preview')):
+			shortcut = QShortcut(QKeySequence(keys), self)
+			shortcut.activated.connect(lambda name=command: self._global_command(name))
+			self._shortcuts.append(shortcut)
+		escape = QShortcut(QKeySequence('Escape'), self)
+		escape.activated.connect(self._escape)
+		self._shortcuts.append(escape)
 		self._status_bar = QStatusBar(self)
 		self._status_bar_text = QLabel(self._status_bar)
 		self._status_bar_text.setOpenExternalLinks(True)
@@ -369,6 +388,54 @@ class MainWindow(QMainWindow):
 		)
 		result = self.exec_dialog(dialog)
 		return result
+	def _global_command(self, name):
+		if self._controller is None:
+			return
+		pane = self._controller._plugin_support.get_active_pane()
+		if pane is None:
+			source = self.panel_manager.source or (self._panes[0] if self._panes else None)
+			pane = self._controller._panes.get(source)
+		if pane is not None:
+			pane.run_command(name)
+
+	def _escape(self):
+		if self.panel_manager.active:
+			self.panel_manager.deactivate()
+		else:
+			for pane in self._panes:
+				pane._filter_bar.close()
+
+	@run_in_main_thread
+	def show_unified_palette(self, commands, visited, current, preferences, query=''):
+		from fman.impl.palette import UnifiedPalette
+		dialog = UnifiedPalette(self, self._app, self._theme.get_quicksearch_item_css(),
+			commands, visited, current, preferences, query)
+		return self.exec_dialog(dialog)
+
+	@run_in_main_thread
+	def activate_panel(self, name, panel, source):
+		self.panel_manager.activate(name, panel, source)
+
+	@run_in_main_thread
+	def deactivate_panel(self):
+		self.panel_manager.deactivate()
+
+	@run_in_main_thread
+	def toggle_settings(self, context, source):
+		from fman.impl.panels import SettingsPanel
+		if self.panel_manager.active == 'settings':
+			self.panel_manager.deactivate()
+		else:
+			self.activate_panel('settings', SettingsPanel(context), source)
+
+	@run_in_main_thread
+	def toggle_preview(self, source):
+		from fman.impl.panels import PreviewPanel
+		if self.panel_manager.active == 'preview':
+			self.panel_manager.deactivate()
+		else:
+			self.activate_panel('preview', PreviewPanel(source, self.deactivate_panel), source)
+
 	@run_in_main_thread
 	def create_progress_dialog(self, title, task_size):
 		return ProgressDialog(
@@ -401,7 +468,7 @@ class MainWindow(QMainWindow):
 			self._fs, self._null_location, self._splitter, self._controller
 		)
 		self._panes.append(result)
-		self._splitter.addWidget(result)
+		self.panel_manager.add_pane(result)
 		return result
 	def get_panes(self):
 		return self._panes
@@ -415,6 +482,7 @@ class MainWindow(QMainWindow):
 		# placed correctly over the center of the window.
 		QTimer(self).singleShot(50, self.shown.emit)
 	def closeEvent(self, _):
+		self.panel_manager.deactivate(focus=False)
 		self.closed.emit()
 	@run_in_main_thread
 	def show_overlay(self, overlay):

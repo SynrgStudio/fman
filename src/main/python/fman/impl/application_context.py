@@ -31,6 +31,7 @@ from fman.impl.onboarding.cleanup_guide import CleanupGuide
 from fman.impl.onboarding.tutorial import Tutorial
 from fman.impl.usage_helper import UsageHelper
 from fman.impl.util.qt import connect_once
+from fman.impl.util.qt.thread import run_in_main_thread
 from fman.impl.util.settings import Settings
 from fman.impl.view import ProxyStyle
 from fman.impl.widgets import MainWindow, Application
@@ -59,6 +60,7 @@ class DevelopmentApplicationContext(ApplicationContext):
 		self.install_exception_hook()
 		self._load_plugins()
 		self.session_manager.show_main_window(self.window)
+		self.apply_preferences()
 		return self.app.exec_()
 	def init_logging(self):
 		logging.basicConfig()
@@ -246,6 +248,46 @@ class DevelopmentApplicationContext(ApplicationContext):
 	@cached_property
 	def usage_helper(self):
 		return UsageHelper(False)
+	@cached_property
+	def preferences(self):
+		from fman.impl.preferences import Preferences
+		return Preferences(DATA_DIRECTORY)
+
+	@run_in_main_thread
+	def set_preferences(self, updates):
+		reset_tools = {key for key in ('editor_exe', 'terminal_exe')
+			if self.preferences.values[key] and updates.get(key) == ''}
+		self.preferences.save(updates)
+		self.apply_preferences(reset_tools)
+
+	@run_in_main_thread
+	def toggle_hidden_files(self):
+		self.set_preferences({'show_hidden_files': not self.preferences.values['show_hidden_files']})
+
+	@run_in_main_thread
+	def apply_preferences(self, reset_tools=()):
+		from PyQt5.QtGui import QFont
+		from core.commands import _is_showing_hidden_files, _toggle_hidden_files
+		values = self.preferences.values
+		self.app.setFont(QFont(values['font_family'], values['font_size']))
+		self.theme.set_user_font(values['font_family'], values['font_size'])
+		for pane in self.window.get_panes():
+			if _is_showing_hidden_files(pane) != values['show_hidden_files']:
+				_toggle_hidden_files(pane, values['show_hidden_files'])
+			widget = pane._widget
+			widget._show_parent_entry = values['show_parent_entry']
+			widget._parent_button.setVisible(values['show_parent_entry'] and not pane.get_path().startswith('null://'))
+		settings = fman.load_json('Core Settings.json', default={})
+		system = os.environ.get('SystemRoot', r'C:\Windows')
+		# Do not overwrite existing advanced tool configurations on startup.
+		if values['editor_exe'] or not settings.get('editor') or 'editor_exe' in reset_tools:
+			settings['editor'] = {**settings.get('editor', {}), 'args': [values['editor_exe'] or join(system, 'System32', 'notepad.exe'), '{file}'], 'shell': False}
+		terminal = settings.get('terminal', {})
+		shipped_terminal = terminal.get('args') == r'start C:\Windows\System32\cmd.exe'
+		if values['terminal_exe'] or not terminal or shipped_terminal or 'terminal_exe' in reset_tools:
+			settings['terminal'] = {**terminal, 'args': [values['terminal_exe'] or join(system, 'System32', 'cmd.exe')], 'cwd': '{curr_dir}', 'shell': False}
+		fman.save_json('Core Settings.json')
+
 	@cached_property
 	def metrics(self):
 		return Metrics()

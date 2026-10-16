@@ -1,28 +1,48 @@
-# fman Clean
+# fman Clean · Windows
 
-Administrador de archivos de doble panel, centrado en teclado y extensible con
-plugins Python. Mantenido por **SynrgStudio**, basado en fman de Michael Herrmann.
-Proyecto independiente: no es una version oficial del autor original.
+Administrador de archivos de doble panel para **Windows x64**, mantenido por
+SynrgStudio. Basado en fman de Michael Herrmann; proyecto independiente, no oficial.
 
-**Licencia del proyecto: GPLv3.** El codigo base conserva su licencia MIT y sus
-creditos. Ver [NOTICE](NOTICE), [licencias](docs/licensing.md) y
-[componentes de terceros](THIRD_PARTY.md).
+**GPLv3** para el proyecto modificado. El código base conserva MIT y sus créditos.
+Ver [NOTICE](NOTICE), [licencias](docs/licensing.md) y [terceros](THIRD_PARTY.md).
 
-## Que cambia
+## Atajos
 
-- Sin registro, pantallas de compra ni sugerencias de instalar plugins al navegar.
-- Sin telemetria remota, identificadores de usuario ni envio de errores.
-- Flechas integradas: **arriba/abajo** seleccionan, **izquierda** sube de carpeta,
-  **derecha** entra en una carpeta. Derecha nunca ejecuta archivos; **Enter** abre.
-- **Tab** cambia de panel; **Ctrl+P** busca ubicaciones;
-  **Ctrl+Shift+P** abre la paleta de comandos (Windows).
-- Copiar/mover/renombrar, papelera, ZIP/7z/tar, temas y plugins.
-- Build local sin fbs Pro, servidores del autor ni credenciales de publicacion.
-- Configuracion independiente en `fman-clean`; no modifica instalaciones de fman.
+| Atajo | Acción |
+| --- | --- |
+| Flechas ↑ / ↓ | Recorrer archivos |
+| Flechas ← / → | Subir de carpeta / entrar en carpeta (no ejecutar archivos) |
+| Enter | Abrir archivo |
+| Tab | Cambiar de panel |
+| **F5 / F6** | Copiar / mover directamente al otro panel |
+| **Ctrl+C / X / V** | Copiar / cortar / pegar con portapapeles |
+| **Ctrl+P** | Buscar carpetas, archivos y comandos en un solo lugar |
+| **Ctrl+,** | Panel de configuración |
+| **F3** | Preview en el panel opuesto; navegar actualiza el contenido |
+| Escape | Cerrar el panel auxiliar o filtro |
+| Ctrl+. | Mostrar/ocultar archivos ocultos |
+| Shift+F6 / F7 | Renombrar / crear carpeta |
 
-## Ejecutar en Windows
+En `Ctrl+P`, escribir `>` limita a comandos; por ejemplo `> compress`.
+Las rutas recientes/locales y los resultados de Everything aparecen como carpetas
+u archivos, separados visualmente de los comandos. Un resultado de archivo se
+**revela y selecciona en su carpeta**, sin ejecutar nada. Tab completa rutas.
+Comprimir también está en el menú contextual; el atajo Alt+F5 sigue disponible.
 
-Requisito: **Python 3.14 x64**. Desde la carpeta del repositorio:
+Configuración reúne fuente/tamaño, ocultos, fila de navegación `..`, editor,
+terminal y conector Everything. Los paneles de configuración y preview son
+mutuamente excluyentes; nunca destruyen la segunda carpeta ni alteran el destino
+real de F5/F6. `..` es una fila de navegación independiente: no se puede copiar,
+borrar ni seleccionar como archivo y no la ocultan los filtros.
+
+Preview inicial: texto plano, PNG/JPG/GIF/BMP/WEBP/ICO y estadísticas no recursivas
+de carpetas. Lectura en segundo plano, con límites de bytes/píxeles/entradas.
+PDF, SVG y AVIF **no están implementados** en esta versión. Sin editor de temas
+ni undo/redo. No hay promesa de recuperar borrados o sobrescrituras.
+
+## Ejecutar
+
+Requisitos: **Windows x64, Python 3.14 x64**. Desde el repositorio:
 
 ```powershell
 python -m venv .venv
@@ -30,53 +50,62 @@ python -m venv .venv
 .\.venv\Scripts\python.exe build.py run
 ```
 
-Despues se puede usar `run-clean.cmd`.
-Para reproducir el entorno Windows de desarrollo/build, en lugar de los
-requisitos anteriores se puede instalar `requirements/windows-build.lock.txt`.
+Después puede usarse `run-clean.cmd`. Para reproducir el entorno de desarrollo y
+build: `requirements/windows-build.lock.txt`. macOS/Linux no son objetivos de
+este proyecto; quedan algunos componentes heredados, sin soporte ni validación.
 
-Para archivos comprimidos e instalacion de plugins se necesita un **7-Zip
-actualizado**, instalado aparte. Se detecta `Program Files/7-Zip/7z.exe`, o
-`7zz`/`7z`/`7za` en PATH. `FMAN_7ZIP` permite elegir otro ejecutable de confianza.
-No incluimos ni descargamos automaticamente herramientas de compresion.
+7-Zip actualizado, instalado aparte, es necesario para ZIP/7z/tar y extraer
+plugins. Se detecta `Program Files/7-Zip/7z.exe` o un ejecutable en PATH;
+`FMAN_7ZIP` permite elegir otro de confianza. No se incluyen binarios antiguos.
 
-macOS/Linux tienen requisitos en `requirements/mac.txt` y `requirements/linux.txt`,
-pero esta version solo fue validada en Windows x64. Los iconos GTK son opcionales;
-si no esta disponible su integracion se usa el proveedor de iconos de Qt.
+## Everything opcional
 
-## Pruebas y build
+Se consulta el índice de **Everything de voidtools**, no Windows Search ni un
+caché del Explorador. Everything debe estar instalado y ejecutándose en segundo
+plano. Para instalar explícitamente su conector SDK x64 oficial:
+
+```powershell
+.\.venv\Scripts\python.exe tools/setup_everything.py
+```
+
+El script valida el hash del archivo oficial y coloca únicamente la DLL y su
+licencia en `%LOCALAPPDATA%/fman-clean/tools/everything/`, fuera del repositorio.
+No descarga nada al arrancar. No instala Everything ni pide elevar fman.
+También puede elegirse una DLL SDK de confianza desde configuración.
+
+Sin Everything o sin conector, Ctrl+P conserva comandos, recientes y rutas
+locales sin ventanas de error. Consultas con debounce, trabajo pendiente acotado,
+respuestas viejas descartadas y helper nativo con timeout. No usamos HTTP ni
+leemos `Everything.db`. Ver [detalles de búsqueda](docs/search.md).
+
+## Pruebas y build local
 
 ```powershell
 .\.venv\Scripts\python.exe build.py test
 .\.venv\Scripts\python.exe tests/smoke.py
 .\.venv\Scripts\python.exe tests/navigation_smoke.py
+.\.venv\Scripts\python.exe tests/windows_features_smoke.py
 .\.venv\Scripts\python.exe -m pip install -r requirements/build.txt
 .\.venv\Scripts\python.exe build.py freeze
 .\.venv\Scripts\python.exe tests/frozen_smoke.py
 ```
 
-Salida local: `target/fman-clean/fman-clean.exe` junto a su carpeta `_internal`.
-No se necesita administrador para navegar; crear symlinks y sus pruebas puede
-requerir privilegios o Modo desarrollador. No cambiamos esa politica local.
+Salida: `target/fman-clean/fman-clean.exe`, junto a `_internal`.
+Las pruebas de symlinks requieren privilegios o Modo desarrollador; no cambiamos
+esa política en tu máquina. CI la habilita solo en el runner descartable.
 
-El build incluye un inventario y avisos de las dependencias instaladas. Eso no
-sustituye las obligaciones de proporcionar el codigo fuente correspondiente
-al distribuir binarios GPL. Este repositorio publica **fuentes**, no un release
-binario listo para redistribucion. Ver [guia de distribucion](docs/licensing.md).
+El build incluye avisos e inventario del entorno, pero **no completa por sí solo
+las obligaciones de distribuir fuentes correspondientes** de los binarios GPL.
+Este repositorio publica fuentes, no un instalador listo para redistribución.
+Consultar [guía de distribución](docs/licensing.md).
 
-## Seguridad y limites
+## Seguridad
 
-Los plugins ejecutan Python con todos los permisos del usuario: **no son un
-sandbox**. La instalacion pide confirmacion y valida limites/rutas basicos.
-No instalar plugins o temas que no sean de confianza.
+Sin registro, pantallas de compra, sugerencias de plugins al navegar, telemetría
+remota, identificadores ni envío de errores. Configuración independiente en
+`fman-clean`, sin modificar instalaciones del fman original.
 
-Ayuda y descargas solicitadas por el usuario pueden usar red. El arranque
-probado no realizo conexiones de sockets; no se promete que todas las funciones
-sean offline. Consultar [revision](docs/review.md) y [seguridad](SECURITY.md).
-
-## Estructura
-
-- `src/main`: aplicacion y recursos.
-- `src/unittest`, `src/integrationtest`, `tests`: pruebas y smoke tests.
-- `build.py`, `tools`: comandos locales y avisos de dependencias.
-- `requirements`: dependencias por plataforma y lock Windows.
-- `LICENSES`, `NOTICE`, `THIRD_PARTY.md`: licencias y atribuciones.
+Los plugins y las DLL/herramientas elegidas ejecutan código con los permisos del
+usuario: **no son un sandbox**. Los límites de preview y de archivos de plugins
+no equivalen a una auditoría completa. Ver [SECURITY.md](SECURITY.md) y
+[alcance de pruebas](docs/review.md).

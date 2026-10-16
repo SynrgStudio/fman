@@ -1,6 +1,9 @@
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 Michael Herrmann
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2026 SynrgStudio
+# Based on fman by Michael Herrmann (MIT); see LICENSES/fman-MIT.txt.
 from collections import OrderedDict
+from copy import deepcopy
+import json
 from fman.impl.util.css import parse_css, CSSEngine
 from tinycss.parsing import ParseError
 
@@ -25,6 +28,8 @@ class Theme:
 		self._extra_qss_from_css = OrderedDict()
 		self._quicksearch_item_css = ''
 		self._updates_enabled = False
+		self._user_font_qss = ''
+		self._user_font_size = None
 	def load(self, css_file_path):
 		with open(css_file_path, 'rb') as f:
 			f_contents = f.read()
@@ -50,7 +55,16 @@ class Theme:
 		self._quicksearch_item_css = self._get_quicksearch_item_css()
 		self._update_app()
 	def get_quicksearch_item_css(self):
-		return self._quicksearch_item_css
+		result = deepcopy(self._quicksearch_item_css)
+		if self._user_font_size and isinstance(result, dict):
+			for role in ('title', 'hint', 'description'):
+				result[role]['font-size_pts'] = self._user_font_size
+		return result
+
+	def set_user_font(self, family, size):
+		self._user_font_size = size
+		self._user_font_qss = '* { font-family: %s; font-size: %dpt; }' % (json.dumps(family, ensure_ascii=False), size)
+		self._update_app()
 	def enable_updates(self):
 		"""
 		Performance optimization: Updating our app's style sheet to reflect
@@ -117,7 +131,7 @@ class Theme:
 	def _update_app(self):
 		if not self._updates_enabled:
 			return
-		qss = self._qss_base + ''.join(self._extra_qss_from_css.values())
+		qss = self._qss_base + ''.join(self._extra_qss_from_css.values()) + self._user_font_qss
 		self._app.set_style_sheet(qss)
 
 class ThemeError(Exception):

@@ -45,6 +45,8 @@ def test():
 
 
 def freeze():
+	if sys.platform != 'win32' or sys.maxsize <= 2**32:
+		raise SystemExit('Standalone builds currently target Windows x64 only.')
 	resources = ROOT / 'target/resources'
 	if resources.exists():
 		rmtree(resources)
@@ -69,16 +71,11 @@ def freeze():
 		'--add-data', str(ROOT / 'LICENSES') + os.pathsep + 'LICENSES',
 		'--hidden-import', 'tinycss', '--hidden-import', 'requests',
 		'--collect-submodules', 'send2trash']
-	if sys.platform == 'win32':
-		args += ['--icon', str(ROOT / 'src/main/icons/Icon.ico'),
-			'--collect-all', 'winpty']
-		for module in ('win32com.shell.shell', 'win32com.shell.shellcon',
-			'win32gui', 'win32wnet', 'pythoncom', 'pywintypes'):
-			args += ['--hidden-import', module]
-	elif sys.platform == 'darwin':
-		args += ['--hidden-import', 'osxtrash', '--hidden-import', 'objc']
-	else:
-		args += ['--hidden-import', 'distro']
+	args += ['--icon', str(ROOT / 'src/main/icons/Icon.ico'),
+		'--collect-all', 'winpty']
+	for module in ('win32com.shell.shell', 'win32com.shell.shellcon',
+		'win32gui', 'win32wnet', 'pythoncom', 'pywintypes'):
+		args += ['--hidden-import', module]
 	args.append(str(SOURCE / 'fman/main.py'))
 	return subprocess.call(args, cwd=ROOT)
 

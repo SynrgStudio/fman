@@ -1,5 +1,6 @@
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 Michael Herrmann
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2026 SynrgStudio
+# Based on fman by Michael Herrmann (MIT); see LICENSES/fman-MIT.txt.
 from core.commands.util import get_user, is_hidden
 from core.quicksearch_matchers import path_starts_with, basename_starts_with, \
 	contains_substring, contains_chars
@@ -24,17 +25,7 @@ __all__ = ['GoTo', 'GoToListener']
 
 class GoTo(DirectoryPaneCommand):
 	def __call__(self, query=''):
-		visited_paths = self._get_visited_paths()
-		get_items = SuggestLocations(visited_paths)
-		result = show_quicksearch(get_items, self._get_tab_completion, query)
-		if result:
-			url = self._get_target_location(*result)
-			if exists(url):
-				# Use OpenDirectory because it handles errors gracefully:
-				self.pane.run_command('open_directory', {'url': url})
-			else:
-				path = as_human_readable(url)
-				_remove_from_visited_paths(visited_paths, path)
+		self.pane.run_command('unified_palette', {'query': query})
 	def _get_target_location(self, query, suggested_dir):
 		if suggested_dir:
 			# The suggested_dir is for instance set when the user clicks on it

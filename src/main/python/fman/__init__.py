@@ -171,6 +171,10 @@ class Window:
 		self._panes = []
 	def get_panes(self):
 		return self._panes
+	def activate_panel(self, name, panel, source):
+		self._widget.activate_panel(name, panel, getattr(source, '_widget', source))
+	def deactivate_panel(self):
+		self._widget.deactivate_panel()
 	def minimize(self):
 		self._widget.minimize()
 	def add_pane(self):
