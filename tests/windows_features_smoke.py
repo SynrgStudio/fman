@@ -65,6 +65,7 @@ def main():
 			pane = panes[0]
 			pane.place_cursor_at(as_url(str(left / 'example.txt')))
 			context.main_window.activateWindow()
+			app.setActiveWindow(context.main_window)
 			pane.focus()
 			QTest.keyClick(pane._widget._file_view, Qt.Key_F3)
 			wait(lambda: context.main_window.panel_manager.active == 'preview', preview)

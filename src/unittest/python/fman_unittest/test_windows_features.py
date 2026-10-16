@@ -12,10 +12,23 @@ from threading import Event
 from fman.impl.latest_worker import LatestWorker
 
 from fman.impl.preferences import Preferences, validate, DEFAULTS
+from fman import clipboard
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from fman.impl.palette import path_items, matches
 from fman.impl.everything import search, helper
 from fman.impl.panels import load_preview
+
+
+class ClipboardTest(unittest.TestCase):
+	def test_empty_clipboard_has_no_files(self):
+		with patch('fman.clipboard._clipboard') as provider:
+			provider.return_value.mimeData.return_value = None
+			self.assertEqual([], clipboard.get_files.__wrapped__())
+
+	def test_empty_clipboard_is_not_a_cut_operation(self):
+		with patch('fman.clipboard._clipboard') as provider:
+			provider.return_value.mimeData.return_value = None
+			self.assertFalse(clipboard.files_were_cut.__wrapped__())
 
 
 class LatestWorkerTest(unittest.TestCase):

@@ -10,7 +10,9 @@
 - F3 read-only text/image/directory-stat preview with resource limits.
 - Parent navigation row stays outside file operations, selections and filters.
 - F5/F6 and Ctrl+C/X/V are retained; compression is available in palette/context menu.
-- Filter removal is idempotent. UI smoke checks wait for readiness instead of fixed sleeps.
+- Filter removal is idempotent. An empty clipboard no longer breaks palette visibility checks.
+- UI smoke checks wait for readiness; hosted Windows widget smoke runs offscreen.
+  Native Windows/source/frozen UI is also checked locally.
 - Everything SDK is installed explicitly outside the repo; no DLL is redistributed.
 
 ## 1.7.6+synrg.1

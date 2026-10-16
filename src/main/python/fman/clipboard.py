@@ -1,5 +1,6 @@
-# SPDX-License-Identifier: MIT
-# Copyright (c) 2026 Michael Herrmann
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2026 SynrgStudio
+# Based on fman by Michael Herrmann (MIT); see LICENSES/fman-MIT.txt.
 from fbs_runtime.platform import is_linux, is_windows, is_gnome_based, \
 	is_kde_based
 from fman.impl.util.qt import as_qurl, from_qurl
@@ -59,7 +60,10 @@ def cut_files(file_urls):
 @run_in_main_thread
 def get_files():
 	result = []
-	for qurl in _clipboard().mimeData().urls():
+	mime = _clipboard().mimeData()
+	if mime is None:
+		return result
+	for qurl in mime.urls():
 		try:
 			result.append(from_qurl(qurl))
 		except ValueError:
@@ -70,13 +74,16 @@ def get_files():
 
 @run_in_main_thread
 def files_were_cut():
+	mime = _clipboard().mimeData()
+	if mime is None:
+		return False
 	if is_windows():
-		data = _clipboard().mimeData().data(_CF_PREFERREDDROPEFFECT)
+		data = mime.data(_CF_PREFERREDDROPEFFECT)
 		return data == _DROPEFFECT_MOVE
 	elif is_linux():
 		mime_type = _get_linux_copy_cut_mime_type()
 		if mime_type:
-			return _clipboard().mimeData().data(mime_type)[:4] == b'cut\n'
+			return mime.data(mime_type)[:4] == b'cut\n'
 	return False
 
 def _clipboard():

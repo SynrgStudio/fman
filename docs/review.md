@@ -7,11 +7,11 @@ were imported.
 
 ## Validation baseline: Windows x64, Python 3.14
 
-- 238 unit tests passed, including 39 cleanup/navigation/runtime/security/Windows regressions.
+- 240 unit tests passed, including 41 cleanup/navigation/runtime/security/Windows regressions.
 - 193 Core tests ran: 189 passed, 4 failed solely with WinError 1314 when creating
   symlinks without Developer Mode/elevation. These are not silently skipped.
 - 69 integration tests passed. The harness keeps QApplication on the main thread.
-- Total: 500 tests run, 496 passed, 4 environment-blocked locally.
+- Total: 502 tests run, 498 passed, 4 environment-blocked locally.
 - Source smoke checks: two panels and local files, no registration/modal, no
   metrics files, clean exit; patched socket connects saw no startup attempts.
 - Real arrow-key UI checks: Right enters folders, Left goes up, Right on files
@@ -19,6 +19,10 @@ were imported.
 - Windows feature UI smoke: real Ctrl+P, command/path results, stale response
   rejection, settings persistence, exclusive panels, live text/image preview,
   filter-immune parent navigation, Tab restoration and F5 copy with preview open.
+- An empty/unavailable clipboard is handled as no file data, including while
+  enumerating palette commands. Both the Windows native and Qt offscreen widget
+  smoke checks passed locally. CI widget smoke uses Qt offscreen on Windows to
+  avoid relying on an interactive desktop; native window/exit checks run locally.
 - Live Everything IPC returned results using both source and frozen helpers.
   Its SDK was explicitly installed outside the repo; no DLL is redistributed.
 - Standalone PyInstaller build and visible-window/clean-exit smoke passed.

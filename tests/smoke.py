@@ -73,6 +73,7 @@ def main():
 			_ = context.app
 			QTimer.singleShot(2500, verify)
 			code = context.run()
+			print('Source smoke shutdown:', code, 'recorded errors:', errors)
 			assert not list((root / 'profile').rglob('Metrics*'))
 			return code or (1 if errors else 0)
 
