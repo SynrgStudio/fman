@@ -133,7 +133,7 @@ class DevelopmentApplicationContext(ApplicationContext):
 			self.app.set_main_window(self._main_window)
 		return self._main_window
 	def _get_main_window_title(self):
-		return APP_NAME
+		return APP_NAME + ' — ' + VERSION
 	@cached_property
 	def help_menu_actions(self):
 		if is_mac():

@@ -15,6 +15,7 @@ from core.fs.zip import ZipFileSystem
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from fman.impl.application_context import DevelopmentApplicationContext
 from fman.impl.metrics import Metrics
+from fman._version import APP_NAME, VERSION
 from fman.impl.nonexistent_shortcut_handler import NonexistentShortcutHandler
 
 
@@ -56,7 +57,7 @@ class CleanForkTest(unittest.TestCase):
 
 	def test_title_without_registration(self):
 		context = DevelopmentApplicationContext()
-		self.assertEqual('fman Clean', context._get_main_window_title())
+		self.assertEqual(APP_NAME + ' — ' + VERSION, context._get_main_window_title())
 		self.assertFalse(hasattr(context, 'is_licensed'))
 		self.assertFalse(hasattr(context, 'splash_screen'))
 

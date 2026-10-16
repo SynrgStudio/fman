@@ -111,6 +111,10 @@ def main():
 		def open_palette():
 			pane = context.window.get_panes()[0]
 			assert all(slot.currentIndex() == 0 for slot in context.main_window.panel_manager.slots)
+			assert context.main_window._last_source_pane is context.window.get_panes()[1]._widget
+			view = next(action.menu() for action in context.main_window.menuBar().actions() if action.text() == '&View')
+			assert any(action.text().startswith('Settings') for action in view.actions())
+			assert any(action.text().startswith('Preview') for action in view.actions())
 			pane.focus()
 			QTest.keyClick(pane._widget._file_view, Qt.Key_P, Qt.ControlModifier)
 			wait(lambda: context.main_window._dialog is not None, palette)

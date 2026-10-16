@@ -292,6 +292,8 @@ class MainWindow(QMainWindow):
 		self._fs = fs
 		self._null_location = null_location
 		self._panes = []
+		self._last_source_pane = None
+		app.focusChanged.connect(self._remember_source_pane)
 		self._splitter = Splitter(self)
 		self.setCentralWidget(self._splitter)
 		from fman.impl.panels import PanelManager
@@ -315,6 +317,20 @@ class MainWindow(QMainWindow):
 		self._timer.setSingleShot(True)
 		self._dialog = None
 		self._init_help_menu(help_menu_actions)
+		view_menu = self.menuBar().addMenu('&View')
+		for caption, command in (('Search…\tCtrl+P', 'unified_palette'),
+			('Settings…\tCtrl+,', 'open_settings'), ('Preview\tF3', 'toggle_preview')):
+			action = QAction(caption, self)
+			action.triggered.connect(lambda checked=False, name=command: self._global_command(name))
+			view_menu.addAction(action)
+
+	def _remember_source_pane(self, previous, focused):
+		if focused is not None:
+			for pane in self._panes:
+				if focused is pane or pane.isAncestorOf(focused):
+					self._last_source_pane = pane
+					break
+
 	def set_controller(self, controller):
 		self._controller = controller
 	def _init_help_menu(self, help_menu_actions):
@@ -393,7 +409,7 @@ class MainWindow(QMainWindow):
 			return
 		pane = self._controller._plugin_support.get_active_pane()
 		if pane is None:
-			source = self.panel_manager.source or (self._panes[0] if self._panes else None)
+			source = self.panel_manager.source or self._last_source_pane or (self._panes[0] if self._panes else None)
 			pane = self._controller._panes.get(source)
 		if pane is not None:
 			pane.run_command(name)

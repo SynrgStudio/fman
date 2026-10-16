@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.6+synrg.3
+
+- Display the exact build version in the title to distinguish stale local executables.
+- Add visible View menu entries for Search, Settings and Preview as alternatives to shortcuts.
+- Keep the most recently focused file pane when commands are invoked from menus.
+- Check the expected build version in the standalone smoke test.
+
 ## 1.7.6+synrg.2
 
 - Windows x64 is now the only supported product/build target.

@@ -4,6 +4,7 @@
 import ctypes
 from ctypes import wintypes
 import os
+import runpy
 from pathlib import Path
 import subprocess
 import sys
@@ -14,6 +15,8 @@ import time
 def main():
 	root = Path(__file__).resolve().parents[1]
 	executable = root / 'target/fman-clean/fman-clean.exe'
+	version = runpy.run_path(str(root / 'src/main/python/fman/_version.py'))
+	expected_title = version['APP_NAME'] + ' — ' + version['VERSION']
 	payload = executable.parent / '_internal'
 	for notice in ('LICENSE', 'NOTICE', 'THIRD_PARTY.md', 'LICENSES/fman-MIT.txt',
 		'dependency-notices/inventory.json'):
@@ -46,7 +49,7 @@ def main():
 					windows.append((hwnd, text.value))
 				return True
 			user32.EnumWindows(collect, 0)
-			assert len(windows) == 1 and windows[0][1] == 'fman Clean', windows
+			assert len(windows) == 1 and windows[0][1] == expected_title, windows
 			user32.PostMessageW(windows[0][0], 0x0010, 0, 0)
 			assert process.wait(timeout=10) == 0, 'Unclean executable exit'
 			print('PASS: standalone main window, no extra visible dialog, clean exit')

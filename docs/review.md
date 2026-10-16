@@ -26,6 +26,9 @@ were imported.
 - Live Everything IPC returned results using both source and frozen helpers.
   Its SDK was explicitly installed outside the repo; no DLL is redistributed.
 - Standalone PyInstaller build and visible-window/clean-exit smoke passed.
+- Interactive standalone shortcuts check sends real Windows Ctrl+comma/F3 only
+  to its own temporary-profile process and verifies visible settings/preview with
+  UI Automation. Build version is checked against the title, not just startup.
 - pip check passed. A dependency database scan of the reference environment
   reported no known vulnerabilities after updating pip; not a native-code audit.
 

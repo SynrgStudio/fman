@@ -29,6 +29,7 @@ def main():
 		with patch.object(socket.socket, 'connect', deny_connect), \
 			 patch.object(socket.socket, 'connect_ex', deny_connect):
 			from fman.impl.application_context import get_application_context
+			from fman._version import APP_NAME, VERSION
 			from PyQt5.QtCore import QTimer
 			from PyQt5.QtWidgets import QApplication
 			context = get_application_context()
@@ -51,7 +52,7 @@ def main():
 					if not ready and monotonic() < deadline:
 						QTimer.singleShot(100, verify)
 						return
-					assert context.main_window.windowTitle() == 'fman Clean'
+					assert context.main_window.windowTitle() == APP_NAME + ' — ' + VERSION
 					panes = context.window.get_panes()
 					assert len(panes) == 2
 					for pane in panes:

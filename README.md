@@ -29,6 +29,9 @@ u archivos, separados visualmente de los comandos. Un resultado de archivo se
 **revela y selecciona en su carpeta**, sin ejecutar nada. Tab completa rutas.
 Comprimir también está en el menú contextual; el atajo Alt+F5 sigue disponible.
 
+El menú **View** también permite abrir Search, Settings y Preview sin atajos.
+La barra de título muestra la versión exacta del ejecutable.
+
 Configuración reúne fuente/tamaño, ocultos, fila de navegación `..`, editor,
 terminal y conector Everything. Los paneles de configuración y preview son
 mutuamente excluyentes; nunca destruyen la segunda carpeta ni alteran el destino
@@ -91,6 +94,21 @@ leemos `Everything.db`. Ver [detalles de búsqueda](docs/search.md).
 ```
 
 Salida: `target/fman-clean/fman-clean.exe`, junto a `_internal`.
+Para crear un acceso inequívoco a este build en el escritorio:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/create_shortcut.ps1
+```
+
+El acceso se llama **fman Clean (Windows)**. No abre builds antiguos de otras
+carpetas. Para probar Ctrl+, y F3 con teclas reales sobre el ejecutable:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/frozen_shortcuts.ps1
+```
+
+Esta última prueba necesita un escritorio interactivo y solo envía teclas si
+su propio proceso de prueba tiene el foco; no toca sesiones o archivos del usuario.
 Las pruebas de symlinks requieren privilegios o Modo desarrollador; no cambiamos
 esa política en tu máquina. CI la habilita solo en el runner descartable.
 
