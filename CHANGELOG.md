@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.6+synrg.4
+
+- Fit image previews to the available space with preserved aspect ratio and no scrollbars.
+- Refit automatically on window/splitter resizing; keep small images at native size.
+- Copy preview content with Ctrl+Shift+C or a visible button: original-resolution
+  decoded image pixels or displayed plain text, never a file URL or panel screenshot.
+- Keep Ctrl+C file copying unchanged. Disable preview copying while loading or closed.
+- Retain bounded original image data for copying; release idle worker result references.
+- Add geometry, full-resolution clipboard MIME and real Windows clipboard format tests.
+
 ## 1.7.6+synrg.3
 
 - Display the exact build version in the title to distinguish stale local executables.

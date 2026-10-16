@@ -3,11 +3,11 @@
 """One mutually exclusive panel in the opposite pane; source navigation stays live."""
 import os
 from pathlib import Path
-from PyQt5.QtCore import Qt, QTimer, QSize, pyqtSlot
-from PyQt5.QtGui import QFontDatabase, QImageReader, QPixmap
+from PyQt5.QtCore import Qt, QTimer, QSize, QRectF, QMimeData, pyqtSlot
+from PyQt5.QtGui import QFontDatabase, QImageReader, QImage, QPainter, QKeySequence
 from PyQt5.QtWidgets import (QWidget, QStackedWidget, QVBoxLayout, QHBoxLayout,
 	QLabel, QPushButton, QPlainTextEdit, QScrollArea, QFormLayout, QComboBox,
-	QSpinBox, QCheckBox, QLineEdit, QFileDialog)
+	QSpinBox, QCheckBox, QLineEdit, QFileDialog, QSizePolicy, QShortcut, QApplication)
 from fman.impl.latest_worker import LatestWorker
 from fman.url import splitscheme, as_human_readable
 
@@ -186,7 +186,7 @@ def load_preview(path):
 			if size.width() <= 0 or size.height() <= 0 or size.width() * size.height() > 40_000_000:
 				return ('text', 'Image dimensions are unsupported or exceed the 40 MP limit.')
 			reader.setAutoTransform(True)
-			reader.setScaledSize(size.scaled(QSize(1400, 1000), Qt.KeepAspectRatio))
+			# Retain the decoded original for copying; fitting is a display-only transform.
 			image = reader.read()
 			return ('image', image) if not image.isNull() else ('text', 'Image decoder could not read this file.')
 		if path.suffix.lower() in ('.pdf', '.exe', '.dll', '.zip', '.7z', '.tar', '.svg', '.avif'):
@@ -206,27 +206,93 @@ def load_preview(path):
 		return ('text', 'Cannot preview: ' + str(error))
 
 
+def fit_image_rect(image_size, viewport_size):
+	"""Center without cropping/distortion; only shrink images larger than the view."""
+	width, height = image_size.width(), image_size.height()
+	available_width, available_height = viewport_size.width(), viewport_size.height()
+	if min(width, height, available_width, available_height) <= 0:
+		return QRectF()
+	scale = min(1.0, available_width / width, available_height / height)
+	fitted_width, fitted_height = width * scale, height * scale
+	return QRectF((available_width - fitted_width) / 2,
+		(available_height - fitted_height) / 2, fitted_width, fitted_height)
+
+
+class FitImageView(QWidget):
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self._image = QImage()
+		self.setMinimumSize(1, 1)
+		self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+		self.setAutoFillBackground(True)
+
+	def set_image(self, image):
+		self._image = QImage(image)
+		self.update()
+
+	def clear(self):
+		self.set_image(QImage())
+
+	def image(self):
+		return QImage(self._image)
+
+	def sizeHint(self):
+		return QSize(320, 240)
+
+	def display_rect(self):
+		return fit_image_rect(self._image.size(), self.size())
+
+	def paintEvent(self, event):
+		if not self._image.isNull():
+			painter = QPainter(self)
+			painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+			painter.drawImage(self.display_rect(), self._image)
+			painter.end()
+
+
+def preview_mime_data(kind, value):
+	"""Content only: never add file URLs/paths or a screenshot of the panel."""
+	mime = QMimeData()
+	if kind == 'image' and isinstance(value, QImage) and not value.isNull():
+		mime.setImageData(value)
+	elif kind == 'text' and isinstance(value, str):
+		mime.setText(value)
+	else:
+		return None
+	return mime
+
+
 class PreviewPanel(QWidget):
 	def __init__(self, source, close, parent=None):
 		super().__init__(parent)
 		self.source = source
 		self._closed = False
 		self._generation = 0
+		self._copy_value = None
 		layout = header(self, 'Preview · F3', close)
 		self.name = QLabel('')
 		self.name.setTextFormat(Qt.PlainText)
 		self.name.setWordWrap(True)
 		layout.addWidget(self.name)
+		self.copy_button = QPushButton('Copy content · Ctrl+Shift+C')
+		self.copy_button.setFocusPolicy(Qt.NoFocus)
+		self.copy_button.setEnabled(False)
+		self.copy_button.clicked.connect(self.copy_content)
+		layout.addWidget(self.copy_button)
+		self.copy_status = QLabel('')
+		self.copy_status.setTextFormat(Qt.PlainText)
+		layout.addWidget(self.copy_status)
+		self._copy_shortcut = QShortcut(QKeySequence('Ctrl+Shift+C'), self)
+		self._copy_shortcut.setContext(Qt.WindowShortcut)
+		self._copy_shortcut.setAutoRepeat(False)
+		self._copy_shortcut.setEnabled(False)
+		self._copy_shortcut.activated.connect(self.copy_content)
 		self.text = QPlainTextEdit()
 		self.text.setReadOnly(True)
-		self.image = QLabel()
-		self.image.setAlignment(Qt.AlignCenter)
-		scroll = QScrollArea()
-		scroll.setWidget(self.image)
-		scroll.setWidgetResizable(True)
+		self.image = FitImageView()
 		self.content = QStackedWidget()
 		self.content.addWidget(self.text)
-		self.content.addWidget(scroll)
+		self.content.addWidget(self.image)
 		layout.addWidget(self.content, 1)
 		self._timer = QTimer(self)
 		self._timer.setSingleShot(True)
@@ -240,7 +306,17 @@ class PreviewPanel(QWidget):
 		self.schedule()
 
 	def schedule(self, *args):
+		if self._closed:
+			return
 		self._generation += 1
+		self._copy_value = None
+		self.copy_button.setEnabled(False)
+		self.copy_button.setText('Copy content · Ctrl+Shift+C')
+		self._copy_shortcut.setEnabled(False)
+		self.copy_status.clear()
+		self.image.clear()
+		self.text.setPlainText('Loading…')
+		self.content.setCurrentIndex(0)
 		self._timer.start()
 
 	def _submit(self):
@@ -263,14 +339,37 @@ class PreviewPanel(QWidget):
 			result = ('text', 'Preview unavailable.')
 		kind, value = result
 		if kind == 'image':
-			self.image.setPixmap(QPixmap.fromImage(value))
+			self.image.set_image(value)
 			self.content.setCurrentIndex(1)
+			self.copy_button.setText('Copy image · Ctrl+Shift+C')
+			self.copy_button.setToolTip('Copy original-resolution image pixels, not the file or the scaled view.')
 		else:
 			self.text.setPlainText(value)
 			self.content.setCurrentIndex(0)
+			self.copy_button.setText('Copy text · Ctrl+Shift+C')
+			self.copy_button.setToolTip('Copy the displayed preview text, not the file.')
+		self._copy_value = (kind, value)
+		self.copy_button.setEnabled(True)
+		self._copy_shortcut.setEnabled(True)
+
+	def copy_content(self):
+		if self._closed or self._copy_value is None:
+			return False
+		kind, value = self._copy_value
+		if kind == 'text':
+			value = self.text.toPlainText()
+		mime = preview_mime_data(kind, value)
+		if mime is None:
+			return False
+		QApplication.clipboard().setMimeData(mime)
+		self.copy_status.setText('Image copied to clipboard.' if kind == 'image' else 'Preview text copied to clipboard.')
+		return True
 
 	def dispose(self):
 		self._closed = True
+		self._copy_value = None
+		self._copy_shortcut.setEnabled(False)
+		self.copy_button.setEnabled(False)
 		self._generation += 1
 		self._timer.stop()
 		self._worker.close()

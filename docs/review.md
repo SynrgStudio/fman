@@ -7,11 +7,11 @@ were imported.
 
 ## Validation baseline: Windows x64, Python 3.14
 
-- 240 unit tests passed, including 41 cleanup/navigation/runtime/security/Windows regressions.
+- 248 unit tests passed, including 49 cleanup/navigation/runtime/security/Windows regressions.
 - 193 Core tests ran: 189 passed, 4 failed solely with WinError 1314 when creating
   symlinks without Developer Mode/elevation. These are not silently skipped.
 - 69 integration tests passed. The harness keeps QApplication on the main thread.
-- Total: 502 tests run, 498 passed, 4 environment-blocked locally.
+- Total: 510 tests run, 506 passed, 4 environment-blocked locally.
 - Source smoke checks: two panels and local files, no registration/modal, no
   metrics files, clean exit; patched socket connects saw no startup attempts.
 - Real arrow-key UI checks: Right enters folders, Left goes up, Right on files
@@ -23,6 +23,14 @@ were imported.
   enumerating palette commands. Both the Windows native and Qt offscreen widget
   smoke checks passed locally. CI widget smoke uses Qt offscreen on Windows to
   avoid relying on an interactive desktop; native window/exit checks run locally.
+- Image fitting is checked for portrait/landscape/zero/small sizes and actual
+  window/splitter resizing. Preview Ctrl+Shift+C copies original-resolution pixels
+  or displayed text, never URLs; regular Ctrl+C still copies files. Stale/loading
+  and closed-preview copy attempts leave the clipboard unchanged.
+- An optional native clipboard check also verifies Windows DIB/DIBV5/Unicode text
+  availability and absence of CF_HDROP for content copies; it restores the prior
+  clipboard if the test still owns it. Default/CI checks use isolated offscreen
+  clipboard data and never inspect the user's clipboard.
 - Live Everything IPC returned results using both source and frozen helpers.
   Its SDK was explicitly installed outside the repo; no DLL is redistributed.
 - Standalone PyInstaller build and visible-window/clean-exit smoke passed.

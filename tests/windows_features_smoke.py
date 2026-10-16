@@ -79,7 +79,7 @@ def main():
 			wait(lambda: context.main_window.panel_manager.panel.content.currentIndex() == 1, image_ready)
 		def image_ready():
 			panel = context.main_window.panel_manager.panel
-			assert panel.image.pixmap() is not None and not panel.image.pixmap().isNull()
+			assert not panel.image.image().isNull()
 			QTest.keyClick(context.window.get_panes()[0]._widget._file_view, Qt.Key_Comma, Qt.ControlModifier)
 			wait(lambda: context.main_window.panel_manager.active == 'settings', settings)
 		def settings():

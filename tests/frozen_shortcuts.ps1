@@ -96,7 +96,8 @@ try {
  Start-Sleep -Milliseconds 400
  Send-Key '{F3}'
  $null=Wait-Visible ('Preview '+[char]0xB7+' F3')
- Write-Host 'PASS: frozen F3 opens preview'
+ $null=Wait-Visible ('Copy text '+[char]0xB7+' Ctrl+Shift+C')
+ Write-Host 'PASS: frozen F3 opens preview with content-copy control'
 } finally {
  if($null -ne $process -and -not $process.HasExited) {
   $process.CloseMainWindow() | Out-Null

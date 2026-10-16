@@ -19,6 +19,7 @@ Ver [NOTICE](NOTICE), [licencias](docs/licensing.md) y [terceros](THIRD_PARTY.md
 | **Ctrl+P** | Buscar carpetas, archivos y comandos en un solo lugar |
 | **Ctrl+,** | Panel de configuración |
 | **F3** | Preview en el panel opuesto; navegar actualiza el contenido |
+| **Ctrl+Shift+C** | Con preview abierto: copiar sus píxeles de imagen o su texto, no el archivo |
 | Escape | Cerrar el panel auxiliar o filtro |
 | Ctrl+. | Mostrar/ocultar archivos ocultos |
 | Shift+F6 / F7 | Renombrar / crear carpeta |
@@ -39,7 +40,19 @@ real de F5/F6. `..` es una fila de navegación independiente: no se puede copiar
 borrar ni seleccionar como archivo y no la ocultan los filtros.
 
 Preview inicial: texto plano, PNG/JPG/GIF/BMP/WEBP/ICO y estadísticas no recursivas
-de carpetas. Lectura en segundo plano, con límites de bytes/píxeles/entradas.
+de carpetas. Las imágenes grandes se ajustan al espacio disponible manteniendo
+su proporción, sin recortes ni scrollbars; se reajustan al mover el divisor o
+redimensionar la ventana. Las pequeñas no se agrandan innecesariamente.
+
+El botón **Copy image / Copy text** y **Ctrl+Shift+C** copian el contenido del
+preview. Las imágenes se copian a su resolución decodificada original, no como
+una miniatura ni una captura del panel. El texto se copia como texto plano tal
+como se muestra (sujeto al límite del preview). **Ctrl+C** en la lista conserva
+su función de copiar archivos. No se copia contenido anterior mientras carga
+otro archivo ni después de cerrar el preview.
+
+Lectura en segundo plano, con límites de bytes/píxeles/entradas (imágenes de hasta
+40 MP y archivos de hasta 25 MiB; texto mostrado limitado a 200 KiB).
 PDF, SVG y AVIF **no están implementados** en esta versión. Sin editor de temas
 ni undo/redo. No hay promesa de recuperar borrados o sobrescrituras.
 
@@ -88,6 +101,7 @@ leemos `Everything.db`. Ver [detalles de búsqueda](docs/search.md).
 .\.venv\Scripts\python.exe tests/smoke.py
 .\.venv\Scripts\python.exe tests/navigation_smoke.py
 .\.venv\Scripts\python.exe tests/windows_features_smoke.py
+.\.venv\Scripts\python.exe tests/preview_content_smoke.py
 .\.venv\Scripts\python.exe -m pip install -r requirements/build.txt
 .\.venv\Scripts\python.exe build.py freeze
 .\.venv\Scripts\python.exe tests/frozen_smoke.py

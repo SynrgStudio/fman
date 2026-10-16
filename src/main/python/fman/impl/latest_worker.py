@@ -53,5 +53,6 @@ class LatestWorker(QObject):
 			if not self._stopped.is_set():
 				try:
 					self.finished.emit(generation, result)
+					del result  # Do not retain a full-resolution image while idle.
 				except RuntimeError:
 					return

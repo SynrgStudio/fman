@@ -40,3 +40,7 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: python tests/windows_features_smoke.py
+      - name: Preview fitting and content clipboard smoke
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python tests/preview_content_smoke.py
