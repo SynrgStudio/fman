@@ -14,7 +14,8 @@ sys.path.insert(0, str(ROOT / 'src/main/python'))
 
 def main():
 	with tempfile.TemporaryDirectory(prefix='fman-arrows-') as directory:
-		root = Path(directory)
+		# Windows runner TEMP may use an 8.3 alias; startup resolves real paths.
+		root = Path(directory).resolve()
 		folder = root / 'files'
 		(folder / 'child').mkdir(parents=True)
 		(folder / 'example.txt').write_text('Do not launch this file', encoding='utf-8')
@@ -41,7 +42,7 @@ def main():
 		def enter():
 			pane = context.window.get_panes()[0]
 			if pane.get_path() != as_url(str(folder)) or pane._widget._model.rowCount() < 2:
-				assert monotonic() < deadline, 'Initial directory did not load'
+				assert monotonic() < deadline, ('Initial directory did not load', pane.get_path(), as_url(str(folder)), pane._widget._model.rowCount())
 				QTimer.singleShot(100, step(enter))
 				return
 			pane.place_cursor_at(as_url(str(folder / 'child')))

@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / 'src/main/python'))
 
 def main():
 	with tempfile.TemporaryDirectory(prefix='fman-clean-smoke-') as directory:
-		root = Path(directory)
+		root = Path(directory).resolve()
 		os.environ['FMAN_DATA_DIRECTORY'] = str(root / 'profile')
 		for name in ('left', 'right'):
 			(root / name).mkdir()

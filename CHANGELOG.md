@@ -11,7 +11,8 @@
 - Parent navigation row stays outside file operations, selections and filters.
 - F5/F6 and Ctrl+C/X/V are retained; compression is available in palette/context menu.
 - Filter removal is idempotent. An empty clipboard no longer breaks palette visibility checks.
-- UI smoke checks wait for readiness; hosted Windows widget smoke runs offscreen.
+- UI smoke checks use canonical Windows temp paths and wait for readiness;
+  hosted Windows widget smoke runs offscreen.
   Native Windows/source/frozen UI is also checked locally.
 - Everything SDK is installed explicitly outside the repo; no DLL is redistributed.
 

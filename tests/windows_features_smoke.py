@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT / 'src/main/python'))
 
 def main():
 	with tempfile.TemporaryDirectory(prefix='fman-windows-ui-') as directory:
-		root = Path(directory)
+		root = Path(directory).resolve()
 		left, right = root / 'left', root / 'right'
 		left.mkdir()
 		right.mkdir()
